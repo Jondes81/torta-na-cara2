@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placar Torta na Cara - Game Show Ultra</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Teko:wght@600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS for Game Show Effects -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            color: #f8fafc;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .font-teko { font-family: 'Teko', sans-serif; }
+
+        /* Neon Glows */
+        .glow-green {
+            box-shadow: 0 0 50px rgba(34, 197, 94, 0.4), inset 0 0 20px rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+        }
+
+        .glow-yellow {
+            box-shadow: 0 0 50px rgba(234, 179, 8, 0.4), inset 0 0 20px rgba(234, 179, 8, 0.2);
+            border-color: #eab308;
+        }
+
+        .glow-blue {
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+        }
+
+        .text-glow-green { text-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 40px rgba(34, 197, 94, 0.4); }
+        .text-glow-yellow { text-shadow: 0 0 20px rgba(234, 179, 8, 0.8), 0 0 40px rgba(234, 179, 8, 0.4); }
+        .text-glow-white { text-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+
+        /* Flash Effects */
+        @keyframes flashWinnerA {
+            0%, 100% { background-color: rgba(34, 197, 94, 0.1); }
+            50% { background-color: rgba(34, 197, 94, 0.4); }
+        }
+
+        @keyframes flashWinnerB {
+            0%, 100% { background-color: rgba(234, 179, 8, 0.1); }
+            50% { background-color: rgba(234, 179, 8, 0.4); }
+        }
+
+        .winner-flash-a { animation: flashWinnerA 0.6s infinite; }
+        .winner-flash-b { animation: flashWinnerB 0.6s infinite; }
+
+        /* Pulse for Ready State */
+        @keyframes pulseReady {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { transform: scale(1.03); box-shadow: 0 0 50px rgba(59, 130, 246, 0.9); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        }
+        .ready-pulse { animation: pulseReady 1.5s infinite ease-in-out; }
+
+        /* Custom Scrollbar for Logs */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-6 lg:p-8">
+
+    <!-- TOP TOOLBAR / CONTROL BAR -->
+    <header class="w-full flex flex-wrap justify-between items-center bg-slate-900/80 backdrop-blur-md border border-slate-800 p-4 rounded-2xl gap-4 shadow-2xl z-10">
+        <!-- Logo / Title -->
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg">
+                <i class="fa-solid font-bold fa-bolt text-2xl text-yellow-300"></i>
+            </div>
+            <div>
+                <h1 class="font-orbitron font-black text-xl md:text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-indigo-400">
+                    TORTA NA CARA <span class="text-xs font-normal text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full">PRO TV</span>
+                </h1>
+                <p class="text-xs text-slate-400">Sistema de Batida por Sensoriamento Bluetooth</p>
+            </div>
+        </div>
+
+        <!-- Connection Status & Action Buttons -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Bluetooth Connection Button -->
+            <button id="btnConnectBT" onclick="connectBluetooth()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2.5 rounded-xl transition duration-200 shadow-lg shadow-blue-600/30 active:scale-95">
+                <i class="fa-brands fa-bluetooth-b text-lg"></i>
+                <span id="txtConnectBT">Conectar Bluetooth</span>
+            </button>
+
+            <!-- USB Serial Connection (Backup) -->
+            <button id="btnConnectSerial" onclick="connectSerial()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-2.5 rounded-xl border border-slate-700 transition duration-200 active:scale-95 text-xs md:text-sm">
+                <i class="fa-solid fa-plug text-slate-400"></i>
+                <span>USB Serial</span>
+            </button>
+
+            <!-- Connection Status Badge -->
+            <div id="statusBadge" class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
+                <span id="statusDot" class="w-3 h-3 rounded-full bg-red-500"></span>
+                <span id="statusText" class="text-xs font-semibold text-slate-400">Desconectado</span>
+            </div>
+
+            <!-- Instructions Modal Button -->
+            <button onclick="toggleModal('modalHelp')" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition" title="Instruções e Código micro:bit">
+                <i class="fa-solid fa-circle-question text-lg"></i>
+            </button>
+
+            <!-- Fullscreen Toggle -->
+            <button onclick="toggleFullscreen()" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition" title="Alternar Tela Cheia (F11)">
+                <i class="fa-solid fa-expand text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME DISPLAY AREA -->
+    <main class="w-full my-auto py-6 flex flex-col items-center justify-center gap-8">
+
+        <!-- STATUS BANNER / CENTER STAGE -->
+        <div id="statusBanner" class="w-full max-w-4xl p-6 rounded-3xl border-2 border-slate-700 bg-slate-900/60 backdrop-blur-md text-center ready-pulse transition-all duration-300">
+            <h2 id="statusBannerSub" class="text-xs md:text-sm font-semibold tracking-widest text-slate-400 uppercase mb-1">
+                Aguardando Liberação do Juiz
+            </h2>
+            <div id="statusBannerMain" class="font-orbitron font-black text-3xl md:text-5xl lg:text-6xl text-slate-200 tracking-wide text-glow-white">
+                AGUARDANDO RESET
+            </div>
+        </div>
+
+        <!-- PLAYERS SCORE CARDS CONTAINER -->
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12 max-w-7xl">
+
+            <!-- JOGADOR A (VERDE) -->
+            <div id="cardPlayerA" class="relative flex flex-col items-center justify-between p-6 md:p-8 rounded-3xl bg-slate-900/80 border-2 border-slate-800 transition-all duration-300 shadow-2xl">
+                <!-- Header Jogador A -->
+                <div class="w-full flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <span class="w-4 h-4 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></span>
+                        <h3 class="font-orbitron font-extrabold text-2xl lg:text-3xl text-green-400 tracking-wider">JOGADOR A</h3>
+                    </div>
+                    <span class="text-xs font-bold text-slate-500 border border-slate-800 px-3 py-1 rounded-lg">TECLA A</span>
+                </div>
+
+                <!-- Bateu Indicator Badge -->
+                <div id="badgeA" class="hidden my-4 px-6 py-2 bg-green-500/20 border border-green-500/50 rounded-full text-green-400 font-orbitron font-bold text-lg md:text-2xl animate-bounce">
+                    <i class="fa-solid fa-trophy mr-2"></i> BATEU PRIMEIRO!
+                </div>
+
+                <!-- Score Display -->
+                <div class="my-6 text-center">
+                    <span id="scoreA" class="font-teko font-bold text-8xl md:text-9xl lg:text-[13rem] leading-none text-green-400 text-glow-green tracking-tight">0</span>
+                </div>
+
+                <!-- Score Adjustment Buttons -->
+                <div class="w-full flex items-center justify-center gap-4 border-t border-slate-800/80 pt-4">
+                    <button onclick="changeScore('A', -1)" class="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xl flex items-center justify-center transition active:scale-90 border border-slate-700">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <span class="text-xs text-slate-400 font-semibold">PONTUAÇÃO</span>
+                    <button onclick="changeScore('A', 1)" class="w-12 h-12 rounded-xl bg-green-600/30 hover:bg-green-600/50 text-green-300 font-bold text-xl flex items-center justify-center transition active:scale-90 border border-green-500/40">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- JOGADOR B (AMARELO) -->
+            <div id="cardPlayerB" class="relative flex flex-col items-center justify-between p-6 md:p-8 rounded-3xl bg-slate-900/80 border-2 border-slate-800 transition-all duration-300 shadow-2xl">
+                <!-- Header Jogador B -->
+                <div class="w-full flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <span class="w-4 h-4 rounded-full bg-yellow-500 shadow-lg shadow-yellow-500/50"></span>
+                        <h3 class="font-orbitron font-extrabold text-2xl lg:text-3xl text-yellow-400 tracking-wider">JOGADOR B</h3>
+                    </div>
+                    <span class="text-xs font-bold text-slate-500 border border-slate-800 px-3 py-1 rounded-lg">TECLA B</span>
+                </div>
+
+                <!-- Bateu Indicator Badge -->
+                <div id="badgeB" class="hidden my-4 px-6 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-400 font-orbitron font-bold text-lg md:text-2xl animate-bounce">
+                    <i class="fa-solid fa-trophy mr-2"></i> BATEU PRIMEIRO!
+                </div>
+
+                <!-- Score Display -->
+                <div class="my-6 text-center">
+                    <span id="scoreB" class="font-teko font-bold text-8xl md:text-9xl lg:text-[13rem] leading-none text-yellow-400 text-glow-yellow tracking-tight">0</span>
+                </div>
+
+                <!-- Score Adjustment Buttons -->
+                <div class="w-full flex items-center justify-center gap-4 border-t border-slate-800/80 pt-4">
+                    <button onclick="changeScore('B', -1)" class="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xl flex items-center justify-center transition active:scale-90 border border-slate-700">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <span class="text-xs text-slate-400 font-semibold">PONTUAÇÃO</span>
+                    <button onclick="changeScore('B', 1)" class="w-12 h-12 rounded-xl bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-300 font-bold text-xl flex items-center justify-center transition active:scale-90 border border-yellow-500/40">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER CONTROLS & LOGS -->
+    <footer class="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 p-4 rounded-2xl shadow-xl">
+        <!-- Judge Controls -->
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <button onclick="triggerReset()" class="w-full md:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/30 transition active:scale-95 font-orbitron">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>LIBERAR RODADA (ESPAÇO)</span>
+            </button>
+            <button onclick="resetMatch()" class="p-3 bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/50 rounded-xl transition" title="Zerar Placar da Partida">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+
+        <!-- Event Logs History -->
+        <div class="w-full md:w-1/2 flex items-center gap-3 bg-slate-950 p-2.5 rounded-xl border border-slate-800/80">
+            <i class="fa-solid fa-clock-rotate-left text-slate-500 ml-2"></i>
+            <div id="logContainer" class="text-xs font-mono text-slate-400 h-6 overflow-hidden flex items-center w-full">
+                <span>[00:00:00] Sistema inicializado. Aguardando conexão ou comando...</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL: INSTRUÇÕES E CÓDIGO MICRO:BIT -->
+    <div id="modalHelp" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto relative shadow-2xl">
+            <button onclick="toggleModal('modalHelp')" class="absolute top-6 right-6 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="font-orbitron font-extrabold text-2xl text-yellow-400 mb-4 flex items-center gap-3">
+                <i class="fa-solid fa-microchip"></i>
+                Como Conectar o BBC micro:bit
+            </h3>
+
+            <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+                <p>
+                    Para usar esta interface com os botões físicos, grave o código Python abaixo no seu <strong>BBC micro:bit</strong> no editor MakeCode.
+                </p>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 relative">
+                    <pre class="text-xs text-green-400 font-mono overflow-x-auto"><code># CÓDIGO MAKECODE PYTHON (TORTA NA CARA PRO)
+bluetooth.start_uart_service()
+strip = neopixel.create(DigitalPin.P16, 24, NeoPixelMode.RGB)
+
+pins.set_pull(DigitalPin.P0, PinPullMode.PULL_DOWN)
+pins.set_pull(DigitalPin.P1, PinPullMode.PULL_DOWN)
+pins.set_pull(DigitalPin.P2, PinPullMode.PULL_UP)
+
+TRAVA = 0
+ultimo_A = 0
+ultimo_B = 0
+
+def on_forever():
+    global TRAVA, ultimo_A, ultimo_B
+    t = input.running_time()
+    
+    A = pins.digital_read_pin(DigitalPin.P0)
+    B = pins.digital_read_pin(DigitalPin.P1)
+    C = pins.digital_read_pin(DigitalPin.P2)
+    
+    # RESET PELO JUIZ (BOTÃO C / P2)
+    if C == 0:
+        TRAVA = 1
+        bluetooth.uart_write_string("RESET\n")
+        basic.show_icon(IconNames.YES)
+        strip.show_color(neopixel.colors(NeoPixelColors.WHITE))
+    
+    # BATEU JOGADOR A (P0)
+    if A == 1 and TRAVA == 1:
+        if t - ultimo_A > 150:
+            TRAVA = 0
+            ultimo_A = t
+            bluetooth.uart_write_string("PONTO_A\n")
+            basic.show_string("A")
+            strip.show_color(neopixel.colors(NeoPixelColors.GREEN))
+            
+    # BATEU JOGADOR B (P1)
+    if B == 1 and TRAVA == 1:
+        if t - ultimo_B > 150:
+            TRAVA = 0
+            ultimo_B = t
+            bluetooth.uart_write_string("PONTO_B\n")
+            basic.show_string("B")
+            strip.show_color(neopixel.colors(NeoPixelColors.YELLOW))
+            
+    basic.pause(10)
+
+basic.forever(on_forever)</code></pre>
+                </div>
+
+                <h4 class="font-bold text-white pt-2">Passo a Passo de Emparelhamento:</h4>
+                <ol class="list-decimal list-inside space-y-1 text-slate-400">
+                    <li>Ligue o micro:bit e certifique-se que o Bluetooth está ativo.</li>
+                    <li>Clique no botão azul <strong>"Conectar Bluetooth"</strong> no topo desta página.</li>
+                    <li>Selecione o <strong>BBC micro:bit</strong> na janela do navegador.</li>
+                    <li>Pronto! O status ficará verde e as batidas aparecerão instantaneamente na TV.</li>
+                </ol>
+
+                <div class="bg-blue-950/40 border border-blue-800/50 p-3 rounded-xl text-xs text-blue-300">
+                    <i class="fa-solid fa-lightbulb mr-1"></i> <strong>Atalhos de Teclado (Juiz):</strong><br>
+                    <strong>Espaço:</strong> Reset/Liberar Rodada | <strong>Tecla A:</strong> Vitória A | <strong>Tecla B:</strong> Vitória B | <strong>F11:</strong> Tela Cheia.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & WEB BLUETOOTH / AUDIO API -->
+    <script>
+        // Game State Variables
+        let scoreA = 0;
+        let scoreB = 0;
+        let gameState = "IDLE"; // IDLE, READY, WINNER_A, WINNER_B
+        
+        // Bluetooth / Serial Handles
+        let bleDevice = null;
+        let rxCharacteristic = null;
+        let serialPort = null;
+
+        // Nordic UART Service UUIDs
+        const UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        const UART_TX_CHARACTERISTIC_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+
+        // Web Audio Context Synthesizer
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+        }
+
+        // Synth Sound Generator (No external MP3 files required)
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'READY') {
+                // High pitch beep for Ready
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.15); // C6
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } 
+            else if (type === 'WINNER_A' || type === 'WINNER_B') {
+                // Game Show Winner Buzz / Fanfare Sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(type === 'WINNER_A' ? 440 : 330, now);
+                osc.frequency.setValueAtTime(type === 'WINNER_A' ? 880 : 660, now + 0.1);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        // UI Render Update Function
+        function updateUI() {
+            document.getElementById('scoreA').innerText = scoreA;
+            document.getElementById('scoreB').innerText = scoreB;
+
+            const banner = document.getElementById('statusBanner');
+            const mainText = document.getElementById('statusBannerMain');
+            const subText = document.getElementById('statusBannerSub');
+
+            const cardA = document.getElementById('cardPlayerA');
+            const cardB = document.getElementById('cardPlayerB');
+            const badgeA = document.getElementById('badgeA');
+            const badgeB = document.getElementById('badgeB');
+
+            // Reset Styles
+            cardA.classList.remove('glow-green', 'winner-flash-a');
+            cardB.classList.remove('glow-yellow', 'winner-flash-b');
+            banner.classList.remove('ready-pulse', 'glow-blue', 'glow-green', 'glow-yellow');
+            badgeA.classList.add('hidden');
+            badgeB.classList.add('hidden');
+
+            if (gameState === "IDLE") {
+                subText.innerText = "SISTEMA BLOQUEADO";
+                mainText.innerText = "AGUARDANDO RESET";
+                mainText.className = "font-orbitron font-black text-3xl md:text-5xl lg:text-6xl text-slate-400";
+            } 
+            else if (gameState === "READY") {
+                banner.classList.add('ready-pulse', 'glow-blue');
+                subText.innerText = "ATENÇÃO JOGADORES!";
+                mainText.innerText = "PRONTOS! VALENDO!";
+                mainText.className = "font-orbitron font-black text-3xl md:text-5xl lg:text-6xl text-blue-400 text-glow-white";
+            } 
+            else if (gameState === "WINNER_A") {
+                cardA.classList.add('glow-green', 'winner-flash-a');
+                banner.classList.add('glow-green');
+                badgeA.classList.remove('hidden');
+                subText.innerText = "RODADA ENCERRADA";
+                mainText.innerText = "JOGADOR A BATEU!";
+                mainText.className = "font-orbitron font-black text-3xl md:text-5xl lg:text-6xl text-green-400 text-glow-green";
+            } 
+            else if (gameState === "WINNER_B") {
+                cardB.classList.add('glow-yellow', 'winner-flash-b');
+                banner.classList.add('glow-yellow');
+                badgeB.classList.remove('hidden');
+                subText.innerText = "RODADA ENCERRADA";
+                mainText.innerText = "JOGADOR B BATEU!";
+                mainText.className = "font-orbitron font-black text-3xl md:text-5xl lg:text-6xl text-yellow-400 text-glow-yellow";
+            }
+        }
+
+        // TRIGGER RESET / RELEASE ROUND
+        function triggerReset() {
+            gameState = "READY";
+            playSound('READY');
+            updateUI();
+            addLog("Rodada liberada pelo Juiz! Estado: VALENDO!");
+        }
+
+        // TRIGGER WINNER
+        function triggerWinner(player) {
+            if (gameState !== "READY") return; // Block hits if round is locked
+
+            if (player === 'A') {
+                gameState = "WINNER_A";
+                scoreA++;
+                playSound('WINNER_A');
+                addLog("JOGADOR A bateu primeiro! +1 Ponto.");
+            } else if (player === 'B') {
+                gameState = "WINNER_B";
+                scoreB++;
+                playSound('WINNER_B');
+                addLog("JOGADOR B bateu primeiro! +1 Ponto.");
+            }
+            updateUI();
+        }
+
+        // MANUAL SCORE ADJUSTMENT
+        function changeScore(player, delta) {
+            if (player === 'A') {
+                scoreA = Math.max(0, scoreA + delta);
+            } else if (player === 'B') {
+                scoreB = Math.max(0, scoreB + delta);
+            }
+            updateUI();
+            addLog(`Pontuação ajustada manualmente. Placar: A=${scoreA} | B=${scoreB}`);
+        }
+
+        // RESET MATCH
+        function resetMatch() {
+            if (confirm("Deseja realmente zerar o placar da partida?")) {
+                scoreA = 0;
+                scoreB = 0;
+                gameState = "IDLE";
+                updateUI();
+                addLog("Partida zerada pelo Juiz.");
+            }
+        }
+
+        // MESSAGE PARSER FROM MICRO:BIT
+        function parseMicrobitMessage(msg) {
+            const cleanMsg = msg.trim();
+            if (!cleanMsg) return;
+
+            addLog(`Recebido via micro:bit: [${cleanMsg}]`);
+
+            if (cleanMsg.includes("RESET")) {
+                triggerReset();
+            } else if (cleanMsg.includes("PONTO_A")) {
+                triggerWinner('A');
+            } else if (cleanMsg.includes("PONTO_B")) {
+                triggerWinner('B');
+            }
+        }
+
+        // WEB BLUETOOTH CONNECTION
+        async function connectBluetooth() {
+            try {
+                updateConnectionStatus("connecting", "Conectando BT...");
+                addLog("Iniciando busca Bluetooth por dispositivos UART...");
+
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'BBC micro:bit' }],
+                    optionalServices: [UART_SERVICE_UUID]
+                });
+
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+                const server = await bleDevice.gatt.connect();
+                const service = await server.getPrimaryService(UART_SERVICE_UUID);
+                rxCharacteristic = await service.getCharacteristic(UART_TX_CHARACTERISTIC_UUID);
+
+                await rxCharacteristic.startNotifications();
+                rxCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    const decoder = new TextDecoder('utf-8');
+                    const value = decoder.decode(event.target.value);
+                    parseMicrobitMessage(value);
+                });
+
+                updateConnectionStatus("connected", "Bluetooth Conectado");
+                addLog(`Conectado com sucesso a: ${bleDevice.name}`);
+
+            } catch (error) {
+                console.error(error);
+                updateConnectionStatus("disconnected", "Erro na Conexão BT");
+                addLog(`Falha na conexão Bluetooth: ${error.message}`);
+            }
+        }
+
+        // WEB SERIAL CONNECTION (BACKUP CABLE MODE)
+        async function connectSerial() {
+            if (!('serial' in navigator)) {
+                alert("Web Serial API não é suportada neste navegador. Use Chrome ou Edge.");
+                return;
+            }
+
+            try {
+                updateConnectionStatus("connecting", "Conectando Serial...");
+                serialPort = await navigator.serial.requestPort();
+                await serialPort.open({ baudRate: 115200 });
+
+                updateConnectionStatus("connected", "USB Serial Conectado");
+                addLog("Conectado via USB Serial!");
+
+                const textDecoder = new TextDecoderStream();
+                const readableStreamClosed = serialPort.readable.pipeTo(textDecoder.writable);
+                const reader = textDecoder.readable.getReader();
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    if (value) parseMicrobitMessage(value);
+                }
+
+            } catch (error) {
+                console.error(error);
+                updateConnectionStatus("disconnected", "Erro Serial");
+                addLog(`Erro Serial: ${error.message}`);
+            }
+        }
+
+        function onDisconnected() {
+            updateConnectionStatus("disconnected", "Desconectado");
+            addLog("Dispositivo Bluetooth foi desconectado.");
+        }
+
+        function updateConnectionStatus(state, text) {
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+
+            txt.innerText = text;
+
+            if (state === "connected") {
+                dot.className = "w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-500/50";
+            } else if (state === "connecting") {
+                dot.className = "w-3 h-3 rounded-full bg-yellow-500 animate-ping";
+            } else {
+                dot.className = "w-3 h-3 rounded-full bg-red-500";
+            }
+        }
+
+        // HELPER FUNCTIONS
+        function addLog(msg) {
+            const container = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString();
+            container.innerHTML = `<span class="text-slate-300">[${time}] ${msg}</span>`;
+        }
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Erro ao ativar Fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // KEYBOARD SHORTCUTS FOR THE JUDGE
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                triggerReset();
+            } else if (e.code === 'KeyA') {
+                triggerWinner('A');
+            } else if (e.code === 'KeyB') {
+                triggerWinner('B');
+            } else if (e.code === 'F11') {
+                // Standard browser behavior handles F11
+            }
+        });
+
+        // INITIALIZATION
+        window.onload = () => {
+            updateUI();
+            addLog("Placar Torta na Cara Pronto. Pressione ESPAÇO ou conecte o micro:bit.");
+        };
+    </script>
+</body>
+</html>
